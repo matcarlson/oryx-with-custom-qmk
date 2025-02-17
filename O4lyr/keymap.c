@@ -2,6 +2,7 @@
 #include "version.h"
 #include "keymap_steno.h"
 #define MOON_LED_LEVEL LED_LEVEL
+#define ML_SAFE_RANGE SAFE_RANGE
 
 enum custom_keycodes {
   RGB_SLD = ML_SAFE_RANGE,
@@ -153,6 +154,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
       SEND_STRING(SS_LALT(SS_TAP(X_LANGUAGE_8) SS_TAP(X_F5) ));
     }
     break;
+    case ORYX_SL_TOGG:
+      if (record->event.pressed) {
+        wait_ms(10);
+        toggle_smart_layer();
+      }
+      break;
 
     case RGB_SLD:
         if (rawhid_state.rgb_control) {
