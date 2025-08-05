@@ -91,12 +91,18 @@ combo_t key_combos[COMBO_COUNT] = {
 };
 
 
+
 extern rgb_config_t rgb_matrix_config;
+
+RGB hsv_to_rgb_with_value(HSV hsv) {
+  RGB rgb = hsv_to_rgb( hsv );
+  float f = (float)rgb_matrix_config.hsv.v / UINT8_MAX;
+  return (RGB){ f * rgb.r, f * rgb.g, f * rgb.b };
+}
 
 void keyboard_post_init_user(void) {
   rgb_matrix_enable();
 }
-
 
 const uint8_t PROGMEM ledmap[][RGB_MATRIX_LED_COUNT][3] = {
     [0] = { {174,255,255}, {0,245,245}, {0,245,245}, {131,255,255}, {25,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {78,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {239,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {211,255,163}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {211,255,163}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {211,255,163}, {0,0,0}, {211,255,163}, {176,255,255}, {86,255,255}, {239,255,255}, {42,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {131,255,255}, {25,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {211,255,163}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {211,255,163}, {174,255,255}, {174,255,255}, {174,255,255}, {174,255,255}, {0,255,167}, {0,0,0}, {211,255,163}, {176,255,255}, {74,255,255}, {42,255,255}, {0,245,245} },
@@ -125,9 +131,8 @@ void set_layer_color(int layer) {
     if (!hsv.h && !hsv.s && !hsv.v) {
         rgb_matrix_set_color( i, 0, 0, 0 );
     } else {
-        RGB rgb = hsv_to_rgb( hsv );
-        float f = (float)rgb_matrix_config.hsv.v / UINT8_MAX;
-        rgb_matrix_set_color( i, f * rgb.r, f * rgb.g, f * rgb.b );   
+        RGB rgb = hsv_to_rgb_with_value(hsv);
+        rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
     }
   }
 }
@@ -136,7 +141,7 @@ bool rgb_matrix_indicators_user(void) {
   if (rawhid_state.rgb_control) {
       return false;
   }
-  if (keyboard_config.disable_layer_led) { return false; }
+    if (keyboard_config.disable_layer_led) { return false; }
   switch (biton32(layer_state)) {
     case 0:
       set_layer_color(0);
@@ -160,10 +165,11 @@ bool rgb_matrix_indicators_user(void) {
       set_layer_color(6);
       break;
    default:
-    if (rgb_matrix_get_flags() == LED_FLAG_NONE)
-      rgb_matrix_set_color_all(0, 0, 0);
-    break;
+      if (rgb_matrix_get_flags() == LED_FLAG_NONE) {
+        rgb_matrix_set_color_all(0, 0, 0);
+      }
   }
+
   return true;
 }
 
